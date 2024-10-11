@@ -1,0 +1,158 @@
+---
+title: "functions-demo"
+output:
+  html_document:
+    theme: readable
+    highlight: zenburn
+    toc: true
+params: 
+  url:
+    value: x  
+---
+
+
+
+<br>
+<hr>
+<br>
+
+I was confused on the directions for creating the functions demo markdown. I included my two attempts at what was being asked in order to capture my thinking/attempts. This markdown shows a test of the salary-report markdown to ensure the functions work.
+
+### Example Report Assets Section 
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set( echo = TRUE, message=F, warning=F )
+```
+
+
+```
+# Be sure to hide all of the extra messages and code in the final report:
+# ```{r setup, include=FALSE}
+# knitr::opts_chunk$set( echo = F, message=F, warning=F )
+# ```
+```
+
+
+```{r libraries}
+# LOAD PACKAGES
+library( dplyr )
+library( pander )
+library( knitr )
+library( gender )
+
+# SOURCE CUSTOM FUNCTIONS
+source( "utils.R" )
+```
+
+
+
+
+```{r data}
+# LOAD DATA
+# URL <- params$url
+# d <- read.csv( URL )
+
+# FOR MANUAL TESTING ONLY
+URL <- 'https://raw.githubusercontent.com/Watts-College/paf-514-template/main/labs/batch-demo/asu-salaries-2020.csv'
+d <- read.csv( URL )
+
+# DATA STEPS 
+
+d$first.name <- get_first_name( d$Full.Name )
+d <- add_gender( d )
+d <- add_titles( d )
+d <- fix_salary( d )
+
+```
+
+
+<br>
+<hr>
+<br>
+
+
+
+
+
+# Salary Range by Rank and Gender 
+
+```{r, results="asis", fig.height=7, fig.width=10}
+t.salary <- 
+  d %>% 
+  filter( ! is.na( title ) & title != "" ) %>% 
+  group_by( title, gender ) %>% 
+  summarize( q25=quantile(salary,0.25),
+             q50=quantile(salary,0.50),
+             q75=quantile(salary,0.75),
+             n=n() ) %>% 
+  ungroup() %>% 
+  mutate( p= round( n/sum(n), 2) )
+
+pander( t.salary )
+
+t.salary %>% knitr::kable(format="html")
+```
+
+
+
+<br>
+<hr>
+<br>
+
+```{r, fig.height=7, fig.width=10, results="asis"}
+for( i in academic.units )
+{
+  
+  d2 <- filter( d, Department.Description == i )
+  if( nrow(d2) == 0 ) { next }
+  # create the salary summary by rank & gender table 
+  # create the top 5 salaries table 
+  # build the graph 
+  d2 %>%  
+  filter( Department.Description == i ) %>% 
+  create_salary_table( ) %>% 
+  build_graph( unit=i )
+
+  # print the tables:  
+ #  cat( paste('<h3>',"TOP FIVE SALARIES",'</h3>' ) )
+  cat( t.salary %>% knitr::kable(format="html") )   
+
+  # cat( '<br><hr><br>' )
+  
+}
+```
+
+
+
+<style>
+
+td {
+    padding: 3px 15px 3px 15px;
+    text-align: center !important;
+}
+
+th {
+    padding: 3px 15px 3px 15px;
+    text-align: center !important;
+    font-weight: bold;
+    color: SlateGray !important;
+}
+
+h1 { 
+    color: SlateGray !important;
+    font-size: 2.05em;
+    margin-top: 25px;
+    
+}
+
+h3 { 
+    color: SlateGray;
+    margin-top: 25px;
+}
+
+</style>
+
+
+
+
